@@ -1,125 +1,86 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMS Online</title>
+    <title>Receber SMS Online</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f3f3f3;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: #6a0dad;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
             background-color: white;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
             border-radius: 10px;
         }
-        button {
-            background-color: #6a0dad;
+        .btn {
+            background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px;
+            padding: 12px 20px;
             cursor: pointer;
+            font-size: 18px;
             border-radius: 5px;
-            font-size: 16px;
+            transition: background-color 0.3s;
         }
-        button:hover {
-            background-color: #4b0077;
+        .btn:hover {
+            background-color: #45a049;
         }
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .messages {
+        .number {
+            font-size: 20px;
             margin-top: 20px;
+            font-weight: bold;
+        }
+        .loading {
+            display: none;
+            font-size: 18px;
+            color: #555;
+        }
+        .numbers-list {
+            margin-top: 20px;
+            text-align: left;
         }
     </style>
 </head>
 <body>
-
-    <h1>Receba SMS Online</h1>
     <div class="container">
-        <button id="getNumberBtn">Obter Número</button>
-
-        <div id="numeroContainer" style="display:none;">
-            <h2>Seu Número: <span id="numero"></span></h2>
-            <textarea id="mensagem" placeholder="Digite sua mensagem"></textarea>
-            <button id="sendSmsBtn">Enviar SMS</button>
-        </div>
-
-        <div class="messages">
-            <h3>Mensagens Recebidas:</h3>
-            <ul id="messagesList"></ul>
-        </div>
+        <h1>Receba números aleatórios de Angola</h1>
+        <p>Clique abaixo para gerar 10 números de telefone aleatórios de Angola.</p>
+        <button class="btn" onclick="getNumbers()">Gerar Números</button>
+        <p class="loading" id="loading">Carregando...</p>
+        <div class="numbers-list" id="numbers-list"></div>
     </div>
 
     <script>
-        const getNumberBtn = document.getElementById("getNumberBtn");
-        const sendSmsBtn = document.getElementById("sendSmsBtn");
-        const numeroContainer = document.getElementById("numeroContainer");
-        const numeroElement = document.getElementById("numero");
-        const mensagemInput = document.getElementById("mensagem");
-        const messagesList = document.getElementById("messagesList");
+        function getNumbers() {
+            // Exibe a mensagem de carregando
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('numbers-list').innerHTML = '';
 
-        let numeroAtual = '';
-
-        // Pega um número aleatório do backend
-        getNumberBtn.addEventListener("click", () => {
-            fetch("https://meu-backend.onrender.com/get-number")
+            // Realiza a requisição para o backend no Render
+            fetch('https://seu-backend.onrender.com/get-number')  // Substitua pela URL do seu backend
                 .then(response => response.json())
                 .then(data => {
-                    numeroAtual = data.numero;
-                    numeroElement.textContent = numeroAtual;
-                    numeroContainer.style.display = 'block';
-                });
-        });
-
-        // Envia a mensagem para o backend
-        sendSmsBtn.addEventListener("click", () => {
-            const mensagem = mensagemInput.value;
-            if (numeroAtual && mensagem) {
-                fetch("https://meu-backend.onrender.com/receive-sms", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        numero: numeroAtual,
-                        mensagem: mensagem
-                    })
+                    // Exibe os números retornados do backend
+                    document.getElementById('loading').style.display = 'none';
+                    const numbersList = data.numbers.map(number => `<p>${number}</p>`).join('');
+                    document.getElementById('numbers-list').innerHTML = numbersList;
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "Mensagem recebida!") {
-                        fetchMessages();
-                    }
-                });
-            }
-        });
-
-        // Pega as mensagens do número
-        function fetchMessages() {
-            fetch(`https://meu-backend.onrender.com/get-messages/${numeroAtual}`)
-                .then(response => response.json())
-                .then(data => {
-                    messagesList.innerHTML = '';
-                    data.mensagens.forEach(mensagem => {
-                        const li = document.createElement("li");
-                        li.textContent = mensagem;
-                        messagesList.appendChild(li);
-                    });
+                .catch(error => {
+                    // Exibe erro se algo der errado
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('numbers-list').innerHTML = 'Erro ao gerar números. Tente novamente.';
+                    console.error('Erro:', error);
                 });
         }
     </script>
