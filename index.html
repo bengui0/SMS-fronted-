@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Online</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #6a0dad;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        button {
+            background-color: #6a0dad;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #4b0077;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .messages {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Receba SMS Online</h1>
+    <div class="container">
+        <button id="getNumberBtn">Obter Número</button>
+
+        <div id="numeroContainer" style="display:none;">
+            <h2>Seu Número: <span id="numero"></span></h2>
+            <textarea id="mensagem" placeholder="Digite sua mensagem"></textarea>
+            <button id="sendSmsBtn">Enviar SMS</button>
+        </div>
+
+        <div class="messages">
+            <h3>Mensagens Recebidas:</h3>
+            <ul id="messagesList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const getNumberBtn = document.getElementById("getNumberBtn");
+        const sendSmsBtn = document.getElementById("sendSmsBtn");
+        const numeroContainer = document.getElementById("numeroContainer");
+        const numeroElement = document.getElementById("numero");
+        const mensagemInput = document.getElementById("mensagem");
+        const messagesList = document.getElementById("messagesList");
+
+        let numeroAtual = '';
+
+        // Pega um número aleatório do backend
+        getNumberBtn.addEventListener("click", () => {
+            fetch("https://meu-backend.onrender.com/get-number")
+                .then(response => response.json())
+                .then(data => {
+                    numeroAtual = data.numero;
+                    numeroElement.textContent = numeroAtual;
+                    numeroContainer.style.display = 'block';
+                });
+        });
+
+        // Envia a mensagem para o backend
+        sendSmsBtn.addEventListener("click", () => {
+            const mensagem = mensagemInput.value;
+            if (numeroAtual && mensagem) {
+                fetch("https://meu-backend.onrender.com/receive-sms", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        numero: numeroAtual,
+                        mensagem: mensagem
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "Mensagem recebida!") {
+                        fetchMessages();
+                    }
+                });
+            }
+        });
+
+        // Pega as mensagens do número
+        function fetchMessages() {
+            fetch(`https://meu-backend.onrender.com/get-messages/${numeroAtual}`)
+                .then(response => response.json())
+                .then(data => {
+                    messagesList.innerHTML = '';
+                    data.mensagens.forEach(mensagem => {
+                        const li = document.createElement("li");
+                        li.textContent = mensagem;
+                        messagesList.appendChild(li);
+                    });
+                });
+        }
+    </script>
+</body>
+</html>
